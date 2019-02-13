@@ -1,14 +1,90 @@
-virsh基本管理操作
-
-  步骤一：virsh基本操作
-    1）列出当前正在运行的虚拟机
-    2）查看虚拟机的信息
+git软件
+  下载git
+    yum -y install git
+  
+  同步内容
+    git clone git://172.40.53.65/nsd1810.git
     
-  步骤二：管理虚拟机
-    1）启动虚拟机
-    2）重启虚拟机
-    3）强制关闭虚拟机
-    4）设置虚拟机开机自动运行
+  同步内容
+    cd nsd1810
+    git pull
+    
+    cat readme.txt
+    外地校区
+      git clone git://124.207.192.18/nsd1810.git
+
+    北京本地
+      git clone git://172.40.53.65/nsd1810.git
+
+    更新(必须进入 git 目录)
+      git pull
+
+virsh基本管理操作
+  硬件辅助虚拟化(CPU)
+  查看CPU支持虚拟化
+      [root@room9pc01 nsd1810]# cat /proc/cpuinfo | grep vmx
+      
+  KVM是linux的内核模块 
+      [root@room9pc01 nsd1810]# lsmod | awk '/kvm/'
+          kvm_intel             170086  0 
+          kvm                   566340  1 kvm_intel
+          irqbypass              13503  1 kvm
+        //模块提供了CPU及内存支持虚拟化技术
+ 
+  QEMU是一个虚拟化的仿真工具,通过ioctl与内核kvm交互完成对硬件的虚拟化支持
+       [root@room9pc01 nsd1810]# ps -elww | grep qemu
+             
+  Libvirt是一个对虚拟化管理的接口和工具,提供用户端程序virsh,virt-install,virt-manager,virt-view交互
+     qemu-kvm 内核自带软件 提供底层仿真支持
+     通过Libvirtd(守护进程)来管理QEMU进行虚拟化
+     libvirt-client用户端软件
+     libvirt-daemon-driver-quem -连接quem驱动
+     
+     用yum安装以上软件 解决依赖关系 
+     启动守护进程
+     virt-v2v   虚拟机迁移工具
+     virt-p2v   物理机迁移工具
+     
+  虚拟机配置声明文件
+     /etc/libvirt/qemu   一个xml文件
+  硬盘文件
+     /var/lib/libvirt/images/    //稀疏文件
+     
+  步骤一：virsh基本操作
+    virsh 控制命令 [虚拟机名称] [参数]
+    [root@room9pc01 nsd1810]# virsh
+        欢迎使用 virsh，虚拟化的交互式终端。
+        输入：'help' 来获得命令的帮助信息
+          'quit' 退出
+    virsh # help
+    virsh # nodeinfo     //[root@room9pc01 nsd1810]# virsh nodeinfo  查看kvm节点(服务器)信息
+  
+    列出当前正在运行的虚拟机
+      [root@room9pc01 ~]# virsh list [--all]     
+          
+        Id    Name                           State
+      ----------------------------------------------------
+        1     node1                          running
+    
+    virsh net-list [--all] 查看虚拟交换机(虚拟网络)
+    
+    virsh dominfo 虚拟机名称     [root@room9pc01 ~]# virsh dominfo rh7_node01  查看虚拟机信息
+    
+    virsh domiflist node0(虚拟机名称)
+    [root@room9pc01 ~]# virsh domiflist rh7_node01
+            接口     类型     源        型号      MAC
+        -------------------------------------------------------
+        -          network    private1   virtio      52:54:00:ec:02:d2
+        -          network    private2   virtio      52:54:00:d0:84:8c
+        -          network    public1    virtio      52:54:00:73:d9:77
+        -          network    public2    virtio      52:54:00:1a:bd:71
+    
+    virsh start|reboot|shutdown 虚拟机名称  //运行|启动|关闭 指定的虚拟机
+    virsh destroy  虚拟机名称               // 强制关闭指定的虚拟机
+    virsh autostart [--disable] 虚拟机名称  //指定开机自启 可以用dominfo查看状态
+    
+    virsh -c(connect) qemu:///system
+    //远程连接管理KVM  virsh -c(connect) qemu+ssh://root@172.40.52.107/system
     
 qemu-img基本操作管理
 
