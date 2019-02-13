@@ -175,15 +175,91 @@ qemu-img基本操作管理
         
   常用命令
         net-list [--all]
-        net-define 虚拟交换机.xml
-        net-undefine 虚拟交换机     删除虚拟交换机
+        net-define 路径/vbr.xml
+        net-undefine vbr     删除虚拟交换机
+        net-start vbr    启动虚拟交换机
+        net-destroy vbr  关闭虚拟交换机
+        net-edit vbr   编辑虚拟交换机
+        net-autostart vbr  开机自启
           
-xml管理  
+xml管理   
+    网站：libvirt.org
+    虚拟机xml配置文件 /etc/libvirt/qemu/虚拟机名.xml
+    查看虚拟机的配置文件 [root@room9pc01]# virsh  dumpxml  node1
+         <domain type='kvm'>
+          <name>node</name>                                     // vish list 下名称
+            <memory unit='KB'>1524000</memory>                  //虚拟机内存信息
+              <currentMemory unit='KB'>1524000</currentMemory>   
+              <vcpu placement='static'>2</vcpu>                  //定义虚拟机cpu内核
+            <os>                                               //操作系统信息
+              <type arch='x86_64' machine='pc'>hvm</type>           
+              <boot dev='hd'/>                                 //启动项设置
+              <bootmenu enable='yes'/>                         //启动选项打开
+              <bios useserial='yes'/>                          //bios接口打开
+            </os>
+            <features>                    //电源管理
+              <acpi/>
+              <apic/>
+            </features>
+            <cpu mode='host-passthrough'>    //cpu运行模式
+            </cpu>
+            <clock offset='localtime'/>           //虚拟机时间 按本地物理机时间
+            <on_poweroff>destroy</on_poweroff>    //模拟按钮
+            <on_reboot>restart</on_reboot>
+            <on_crash>restart</on_crash>
+            <devices>                                    //设备仿真
+              <emulator>/usr/libexec/qemu-kvm</emulator>
+              <disk type='file' device='disk'>              //磁盘仿真
+                <driver name='qemu' type='qcow2'/>        
+                <source file='/var/lib/libvirt/images/node.img'/>   //定义磁盘文件名
+                <target dev='vda' bus='virtio'/>
+              </disk>
+              <interface type='bridge'>                  //网卡仿真
+                <source bridge='vbr'/>                   //定义虚拟交换机
+                <model type='virtio'/>
+              </interface>
+              <channel type='unix'>
+                <target type='virtio' name='org.qemu.guest_agent.0'/>    //虚拟机指令
+              </channel>
+              <serial type='pty'></serial>
+              <console type='pty'>                //console终端 不受网络影响 提供命令  virsh console 虚拟机名
+                <target type='serial'/>
+              </console>
+              <memballoon model='virtio'></memballoon>
+            </devices>
+          </domain>
+          
+          virsh define node1
+          virsh start node1
+          virsh console node1
+             
   步骤一：导出虚拟机xml的配置文件
+    [root@room9pc01 ~]# cd /etc/libvirt/qemu/
+    [root@room9pc01 qemu]# virsh  dumpxml  node1
+    [root@room9pc01 qemu]# virsh  dumpxml  node1 > node.xml     
+    //导出虚拟机node1的配置文件为node.xml
+    [root@room9pc01 qemu]# lsnode.xml
+    
+    [root@room9pc01 qemu]# virsh edit node1            
+    <domain type='kvm'>
+      <name>node1</name>                        //node1为虚拟机的名称，可以随意修改
+      <uuid>76d5dc2c-5eef-4e30-8b6c-e58851814f84</uuid>  //uuid可以去掉
+      <memory unit='KiB'>2048000</memory>                //内存大小可以调整
+      <currentMemory unit='KiB'>2048000</currentMemory>
+      <disk type='file' device='disk'>
+          <source file='/var/lib/libvirt/images/rhel7.2.qcow2'/>        //后端盘路径
+       .. ..
+      <interface type='network'>
+          <mac address='52:54:00:91:52:e4'/>            
+    //mac地址和带有address字样的全部去掉
+       .. ..
+       
   步骤二：重新定义虚拟机
+    [root@room9pc01 qemu]# virsh define node1.xml
   
 安装虚拟机
-  步骤一：配置网络yum源
+
+  步骤一：配置网络yum源(制作后端盘)
   步骤二：安装一个虚拟机
   步骤三：制作一个虚拟机模板
   
