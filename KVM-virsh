@@ -86,20 +86,98 @@ virsh基本管理操作
     virsh -c(connect) qemu:///system
     //远程连接管理KVM  virsh -c(connect) qemu+ssh://root@172.40.52.107/system
     
+常用镜像盘类型
+               RAW格式      QCOW2格式
+   KVM默认       否            是
+   I/O效率       高            较高
+   占用空间       大             小
+   压缩           不支持         支持
+   后端盘复用      不支持         支持
+   快照           不支持         支持
+   
 qemu-img基本操作管理
-
+    qemu-img虚拟机磁盘管理命令是,支持非常多的磁盘格式
+            
   步骤一：创建一个新的镜像盘文件
     1)qemu-img命令格式：qemu-img 命令 参数 块文件名称 大小
+      常用命令
+      -create   创建
+      -convert  转换
+      -info     查看信息
+      -snapshot 管理快照
+      
+                        //qemu-img create -f 格式 磁盘路径 大小
+      [root@room9pc01 ~]# qemu-img create   -f qcow2 disk.img 50G    //qcow2为创建的格式 
+      Formatting 'disk.img', fmt=qcow2 size=53687091200 encryption=off cluster_size=65536 lazy_refcounts=off
+      [root@room9pc01 ~]# qemu-img info disk.img 
+        image: disk.img
+        file format: qcow2
+        virtual size: 50G (53687091200 bytes)
+        disk size: 196K
+        cluster_size: 65536
+        Format specific information:
+        compat: 1.1
+        lazy refcounts: false
+
     2）使用后端模板文件创建一个新的镜像盘文件
-    3）使用后端模板文件创建一个16G的镜像盘文件
-  
+      COW技术原理                   //虚拟化核心方式
+      copy on write , 写时复制
+      直接映射原始盘数据
+      当发生数据修改时(写操作),自动将数据从后端盘存入前端盘
+      前端盘修改数据不会回写入后端盘
+      
+      [root@room9pc01 images]# qemu-img create -f qcow2 -b node.qcow2 node1.img 20G    //-b 指定后端盘
+      Formatting 'node1.img', fmt=qcow2 size=21474836480 backing_file='node.qcow2' encryption=off 
+      cluster_size=65536 lazy_refcounts=off 
+     
   步骤二：查看镜像文件的信息
-    
+      [root@room9pc01 images]# qemu-img info node1.img 
+        image: node1.img
+        file format: qcow2
+        virtual size: 20G (21474836480 bytes)
+        disk size: 196K
+        cluster_size: 65536
+        backing file: node.qcow2          //查看后端盘
+        Format specific information:
+        compat: 1.1
+        lazy refcounts: false
+      
 创建一个虚拟网络
   步骤一：创建一个名为vbr的虚拟网络
+        [root@room9pc01 ~]# vim  /etc/libvirt/qemu/networks/vbr.xml
+        <network>
+        <name>vbr</name>                //vbr为虚拟网络的名字
+        <bridge name="vbr" stp="on" delay="on" />  //ifconfig 查询的名字  stp生成树协议开启  延迟规则开启
+        <domain name="vbr" />
+        <forward mode="nat"/>                //转发模式
+        <ip address="192.168.1.254" netmask="255.255.255.0">        //ip为192.168.1.254
+          <dhcp>                                                     //dhcp分配ip
+            <range start="192.168.1.100" end="192.168.1.200"/>     //ip范围是100-200
+          </dhcp>
+        </ip>
+        </network>
+    
   步骤二：启动vbr虚拟网络并用ifconfig验证
+        [root@room9pc01 ~]# virsh net-define vbr        //定义vbr虚拟网络
+        [root@room9pc01 ~]# virsh net-list vbr           //查看
+        [root@room9pc01 ~]# virsh net-start vbr      //启动vbr虚拟网络
+        [root@room9pc01 ~]# ifconfig                //igconfig验证 
+         vbr: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+            inet 192.168.1.254  netmask 255.255.255.0  broadcast 192.168.1.255
+            ether 52:54:00:b7:1c:10  txqueuelen 1000  (Ethernet)
+            RX packets 2460  bytes 176958 (172.8 KiB)
+            RX errors 0  dropped 0  overruns 0  frame 0
+            TX packets 1948  bytes 532542 (520.0 KiB)
+            TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+            
   步骤三：设置vbr虚拟网络开机自启动
-  
+        [root@room9pc01 ~]# virsh net-autostart vbr
+        
+  常用命令
+        net-list [--all]
+        net-define 虚拟交换机.xml
+        net-undefine 虚拟交换机     删除虚拟交换机
+          
 xml管理  
   步骤一：导出虚拟机xml的配置文件
   步骤二：重新定义虚拟机
