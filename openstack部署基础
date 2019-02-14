@@ -39,7 +39,12 @@ openstack
     
  openstack环境准备
    KVM创建2台虚拟机
-    virsh create -f qcow2 -d 后端模版  新虚拟机名称 50G
+   #!/bin/bash
+    read -p "Enter virtual name:" name
+    qemu-img create -f qcow2 -b /var/lib/libvirt/images/node.qcow2 /var/lib/libvirt/images/${name}.img 50G &> /dev/null
+    sed "s/node/${name}/" /root/nsd1810/node.xml > /etc/libvirt/qemu/${name}.xml
+    virsh define /etc/libvirt/qemu/${name}.xml
+    virsh start ${name}
     
    磁盘扩容
     lsblk
