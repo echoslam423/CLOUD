@@ -262,8 +262,43 @@ xml管理
   步骤一：配置网络yum源(制作后端盘)
   步骤二：安装一个虚拟机
   步骤三：制作一个虚拟机模板
-  
+    1）禁用selinux
+    2）卸载防火墙与NetworkManager
+    3）配置yum源
+    4）导入公钥
+    5）配置网卡
+    6）禁用空路由
+    7）添加console配置
+    8）重新生成grub.cfg
+    9）安装扩展分区软件
+    10）第一次开机自动扩容
+    11）关闭虚拟机后执行信息清理工作
+   
 离线访问虚拟机问题
   步骤一：用xml生成一个新的虚拟机
+    [root@room9pc01 ~]# cd /etc/libvirt/qemu/
+    [root@room9pc01 qemu]# cp centos7.0.xml  local.xml
+    [root@room9pc01 qemu]# vim local.xml 
+    <domain type='kvm'>
+      <name>local</name>        //修改名字
+      <memory unit='KiB'>2048000</memory>        //修改内存
+      <currentMemory unit='KiB'>2048000</currentMemory>
+    ...
+      <source file='/var/lib/libvirt/images/local.img'/>     //img文件位置
+      
+    [root@room9pc01 ~]# cd /var/lib/libvirt/images/
+    [root@room9pc01 images]# qemu-img  create –b node.qcow2 –f qcow2 local.img
+    [root@room9pc01 images]# virsh define /etc/libvirt/qemu/local.xml
+    [root@room9pc01 images]# virsh start local
+    [root@room9pc01 images]# virsh console local
+      
   步骤二：guestmount实现离线访问
-
+    基本用法：guestmount -a 虚拟机磁盘路径 -i /挂载点
+      -a：指定虚拟磁盘
+      -i：挂载点
+        [root@room9pc01 ~]# mkdir /mnt/kdisk
+        [root@room9pc01 ~]# guestmount  -a  node1.qcow2  -i  /mnt/kdisk
+        [root@room9pc01 ~]# cd /mnt/kdisk
+        [root@room9pc01 kdisk]#  ls      /虚拟机的根下目录 chroot ..
+        bin       home      media      opt        sbin     tmp
+        boot      lib      misc       proc       selinux     usr
