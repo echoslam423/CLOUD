@@ -118,6 +118,56 @@ openstack
           1179 CONFIG_PROVISION_DEMO=n
        5)启动openstack
           packstack --answer-file=answer.ini
-          
-       
-        
+       6)安装 openstack 工具包
+          yum install openstack-utils
+       7)检查服务状态
+          openstack-status
+       8)openstack 命令行认证
+         cd /root/
+         . keystonerc_admin
+
+         openstack 命令行 参数1  参数2  参数3 ... ...
+         openstack 子命令
+          查看帮助
+         openstack help 子命令
+
+  步骤一：查看外部OVS网桥
+    1）查看br-ex网桥配置（br-ex为OVS网桥设备）
+    [root@openstack ~]# cat /etc/sysconfig/network-scripts/ifcfg-br-ex 
+    ONBOOT="yes"
+    NM_CONTROLLED="no" 
+    IPADDR="192.168.1.1"
+    PREFIX=24
+    GATEWAY=192.168.1.254
+    DEVICE=br-ex
+    NAME=br-ex
+    DEVICETYPE=ovs
+    OVSBOOTPROTO="static"
+    TYPE=OVSBridge
+    
+    2）查看eth0网卡配置（该网卡为OVS网桥的接口)
+    [root@nova ~]# cat /etc/sysconfig/network-scripts/ifcfg-eth0 
+    DEVICE=eth0
+    NAME=eth0
+    DEVICETYPE=ovs
+    TYPE=OVSPort
+    OVS_BRIDGE=br-ex
+    ONBOOT=yes
+    BOOTPROTO=none
+    
+    3）验证OVS配置
+        [root@nova ~]# ovs-vsctl show
+        Bridge br-ex
+            Controller "tcp:127.0.0.1:6633"
+                is_connected: true
+            fail_mode: secure
+            Port br-ex
+                Interface br-ex
+                    type: internal
+            Port phy-br-ex
+                Interface phy-br-ex
+                    type: patch
+                    options: {peer=int-br-ex}
+            Port "eth0"
+                Interface "eth0"
+        ovs_version: "2.5.0"
