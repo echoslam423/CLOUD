@@ -116,5 +116,8 @@ openstack
           921 CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-ex:eth0
           936 CONFIG_NEUTRON_OVS_TUNNEL_IF=eth1
           1179 CONFIG_PROVISION_DEMO=n
+       5)启动openstack
+          packstack --answer-file=answer.ini
           
+       
         
