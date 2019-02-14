@@ -1,4 +1,40 @@
-date +%z        查看本机时区
-timedatectl   --help     用该命令修改时区
-chronyc sources -v     查看NTP服务状态 ^? 同步失败 ^*同步成功
-ss -natulp | grep 123  查看ntp端口号
+NTP时间服务器
+  chrony
+  vim /etc/chrony.conf
+    server ntp1.aliyun.com iburst
+    allow 0/0
+  date +%z        查看本机时区
+  timedatectl   --help     用该命令修改时区
+  chronyc sources -v     查看NTP服务状态 ^? 同步失败 ^*同步成功
+  ss -natulp | grep 123  查看ntp端口号
+
+云计算
+  基于互联网的相关服务
+  Iaas 基础设施即服务
+  Paas 平台即服务
+  Saas 软件即服务
+  
+openstack
+  openstack时一套Iaas解决方案
+  是一个开源的云计算管理平台
+  
+  Horizon
+    管理openstack各种服务,基于web的管理接口
+    通过图形界面管理操作
+
+  Keystone
+    为其他服务提供认证授权的集中身份管理
+  
+  Neutron
+    软件定义网络
+    
+  cinder
+    虚拟机管理储存卷
+    
+  Nova
+    节点上管理虚拟机服务
+    
+  Glance
+    扮演虚拟镜像角色
+    
+ 
