@@ -94,3 +94,27 @@ openstack
       ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
       192.168.1.11	nova01
       192.168.1.10	openstack
+
+安装openstack
+    创建逻辑卷
+    导入签名检查文件
+    openstack安装
+      1)安装虚拟化平台
+        qemu-kvm libvirt-client libvirt-daemon libvirt-daemon-driver-qemu python-setuptools
+      2)安装packstack
+        openstack-packstack
+      3)创建应答文件
+        packstack --gen-answer-file=answer.ini
+      4)编辑应答文件
+          vim /root/answer.ini
+          42 CONFIG_SWIFT_INSTALL=n
+          75 CONFIG_NTP_SERVERS=192.168.1.254          
+          333 CONFIG_KEYSTONE_ADMIN_PW=a
+          840 CONFIG_NEUTRON_ML2_TYPE_DRIVERS=flat,vxlan
+          876 CONFIG_NEUTRON_ML2_VXLAN_GROUP=239.1.1.5          
+          910 CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-ex
+          921 CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-ex:eth0
+          936 CONFIG_NEUTRON_OVS_TUNNEL_IF=eth1
+          1179 CONFIG_PROVISION_DEMO=n
+          
+        
