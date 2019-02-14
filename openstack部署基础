@@ -1,0 +1,4 @@
+date +%z        查看本机时区
+timedatectl   --help     用该命令修改时区
+chronyc sources -v     查看NTP服务状态 ^? 同步失败 ^*同步成功
+ss -natulp | grep 123  查看ntp端口号
