@@ -1,0 +1,57 @@
+容器技术
+  容器技术已成为应用程序封装和交付的核心技术
+  容器技术不是虚拟化,是对资源的切分及隔离,使用
+  技术的核心组成：
+    Cgroups (control groups) -资源管理
+    NameSpace 进程隔离
+    SELinx 安全
+    
+Docker
+  Docker时一套完整的容器管理系统
+  Docker提供了一组命令,让用户更方便的使用容器技术,而不用关心内核
+  
+安装docker
+  制作自定义yum源
+  安装docker
+  
+镜像的基本操作
+  docker镜像
+    docker中容器基于镜像启动
+    镜像是启动容器的核心
+    镜像采用分层设计
+    使用快照COW技术,确保底层数据不丢失
+    docker 子命令 子命令参数
+    docker help 子命令                   //docker help push 查看上传命令
+    man docker-子命令
+    [root@docker01 ~]# docker images   // 列出可使用的镜像
+    REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+    busybox             latest              d8233ab899d4        3 days ago          1.199 MB
+     Repository+tag 镜像+标签 唯一性
+    
+   查看docker镜像库 
+    docker hub 镜像仓库
+    http://hub.docker.com   //官方提供的镜像仓库  
+    [root@docker01 ~]# docker search nginx //主机连接互联网 可以直接用该命令查找
+    名称                        描述                                            下载次数   是否是官方    自动化
+    NAME                       DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+    nginx                      Official build of Nginx.                        10918     [OK]       
+    jwilder/nginx-proxy        Automated Nginx reverse proxy for docker c...   1533                 [OK]
+  
+  下载镜像
+    [root@docker01 ~]# docker pull 镜像的名称
+    
+  镜像的保存与导入
+   docker save | load
+   备份保存,生成的是tar文件包
+   [root@docker01 ~]# docker save busybox:latest > busybox.tar
+   [root@docker01 ~]# ls
+    busybox.tar                 //生成在当前路径下
+   [root@docker01 ~]# scp busybox.tar 192.168.1.12:/root/
+    root@192.168.1.12's password: 
+    busybox.tar        100% 1392KB  29.1MB/s   00:00
+    导入已生成的tar文件包
+   [root@docker02 ~]# docker load < busybox.tar
+    adab5d09ba79: Loading layer [==================================================>] 1.416 MB/1.416 MB
+    Loaded image: busybox:latest
+   
+   
