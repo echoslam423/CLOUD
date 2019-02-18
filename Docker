@@ -54,4 +54,43 @@ Docker
     adab5d09ba79: Loading layer [==================================================>] 1.416 MB/1.416 MB
     Loaded image: busybox:latest
    
-   
+ 启动容器命令
+   docker run -it 镜像的名称:标签 命令     //命令为镜像内的命令
+    没有命令输入的时候 就会启动默认命令   //有默认启动命令为进程服务
+    latest 是默认标签
+ 
+ 查看正在运行中的容器
+  [root@docker01 ~]# docker ps
+  CONTAINER ID   IMAGE        COMMAND     CREATED       STATUS       PORTS           NAMES
+  080bf2b7f6fa   nginx:latest "/bin/bash" 8 seconds ago Up 5 seconds 80/tcp, 443/tcp berserk_swirles
+    
+  [root@docker01 ~]# docker ps -a    //--all 显示所有
+    
+ 其他镜像命令列表
+  docker history                  //记录容器每一次映射的记录内容 显示镜像层及制作过程
+  docker inspect                  //查看容器底层详细信息
+  docker rmi                      //remove image 删除本地镜像
+  docker tag                      //修改镜像名称及标签 类似于软连接
+  
+容器的常用命令
+  docker run                  //运行容器
+         -i 交互
+         -t 终端
+         -d 后台进程         
+  [root@docker01 ~]# docker run -itd nginx
+  14f595a865e49936ae2056b1c03a422ff2d0df3cd39b090db777bf1f9d778f6b
+  docker ps                   //查看容器列表
+  [root@docker01 ~]# docker ps
+CONTAINER ID   IMAGE         COMMAND                  CREATED             STATUS              PORTS               NAMES
+14f595a865e4   nginx         "nginx -g 'daemon off"   5 seconds ago       Up 3 seconds        80/tcp, 443/tcp     elegant_perlman
+080bf2b7f6fa   nginx:latest  "/bin/bash"              About an hour ago   Up About an hour    80/tcp, 443/tcp     berserk_swirles
+  
+  docker stop                 //关闭容器
+  docker start/restart                //启动已有的docker容器 docker ps -a 查看
+  docker inspect
+  docker top                        //查看容器的进程列表  相当于在容器里执行docker ps
+  docker rm                          // 删除容器
+  docker attach|exec                //进入容器
+  [root@docker01 ~]# docker exec -it 14f595a865e4 /bin/bash   //未使用容器的上帝进程开启bash
+  root@14f595a865e4:/#
+  docker attach 14f595a865e4     //不关闭上帝进程 ctrl+p+Q
