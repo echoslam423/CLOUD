@@ -113,23 +113,105 @@ Dockerfile文件
   WORKDIR:定义容器的工作目录
   CMD:容器启动时执行命令, 仅有一条CMD
   
-[root@docker1 ~]# mkdir oo
-[root@docker1 ~]# cd oo
-[root@docker1 oo]# touch Dockerfile    //Dockerfile文件第一个字母要大写
-[root@docker1 oo]# cp /etc/yum.repos.d/local.repo  ./
-[root@docker1 oo]# vi Dockerfile
-FROM  myos:v1
-RUN rm -f /etc/yum.repos.d/*
-ADD local.repo /etc/yum.repos.d/local.repo
-RUN yum -y install httpd
-ENV EnvironmentFile=/etc/sysconfig/httpd
-WORKDIR /var/www/html/            //定义容器默认工作目录
-RUN echo "test" > /var/www/html/index.html
-EXPOSE 80                //设置开放端口号
-CMD ["/usr/sbin/httpd", "-DFOREGROUND"]   //修改命令的默认启动方式
-[root@docker1 oo]# docker build -t myos:http .   //注意 .是一个参数 代表当前目录
-[root@docker1 oo]# docker run -d  myos:http 
-d9a5402709b26b42cd304c77be442559a5329dc784ec4f6c90e4abac1c88e206
-[root@docker1 oo]# docker inspect d9
-[root@docker1 oo]# curl 172.17.0.7
+  [root@docker1 ~]# mkdir oo
+  [root@docker1 ~]# cd oo
+  [root@docker1 oo]# touch Dockerfile    //Dockerfile文件第一个字母要大写
+  [root@docker1 oo]# cp /etc/yum.repos.d/local.repo  ./
+  [root@docker1 oo]# vi Dockerfile
+  FROM  myos:v1
+  RUN rm -f /etc/yum.repos.d/*
+  ADD local.repo /etc/yum.repos.d/local.repo
+  RUN yum -y install httpd
+  ENV EnvironmentFile=/etc/sysconfig/httpd
+  WORKDIR /var/www/html/            //定义容器默认工作目录
+  RUN echo "test" > /var/www/html/index.html
+  EXPOSE 80                //设置开放端口号
+  CMD ["/usr/sbin/httpd", "-DFOREGROUND"]   //修改命令的默认启动方式
+  [root@docker1 oo]# docker build -t myos:http .   //注意 .是一个参数 代表当前目录
+  [root@docker1 oo]# docker run -d  myos:http 
+  d9a5402709b26b42cd304c77be442559a5329dc784ec4f6c90e4abac1c88e206
+  [root@docker1 oo]# docker inspect d9
+  [root@docker1 oo]# curl 172.17.0.7
   
+自定义镜像服务                      //container容器 Environment环境
+  共享镜像的一台服务器
+  配置docker01共享镜像仓库
+  vim /etc/docker/daemon.json
+  {
+    "insecure-registries" : ["192.168.1.10:5000"]    //使用私有仓库运行容器  registry 登录库
+  }
+  [root@docker1 oo]# systemctl restart docker
+  [root@docker1 oo]# docker run -d -p 5000:5000 registry
+  273be3d1f3280b392cf382f4b74fea53aed58968122eff69fd016f638505ee0e
+  [root@docker1 oo]# curl 192.168.1.10:5000/v2/
+  {}    //出现括号
+  [root@docker1 oo]# docker tag busybox:latest 192.168.1.10:5000/busybox:latest  
+  //打标签
+  [root@docker1 oo]# docker push 192.168.1.10:5000/busybox:latest  //上传
+  [root@docker1 oo]# docker tag myos:http 192.168.1.10:5000/myos:http
+  [root@docker1 oo]# docker push  192.168.1.10:5000/myos:http
+  
+  在客户端上的操作
+  [root@docker2 ~]# scp 192.168.1.10:/etc/docker/daemon.json  /etc/docker/
+  [root@docker2 ~]# systemctl restart docker
+  [root@docker2 ~]# docker images
+  [root@docker2 ~]# docker run -it 192.168.1.10:5000/myos:http /bin/bash    
+  //直接启动
+  
+查看私有仓库 
+  [root@docker1 oo]# curl  http://192.168.1.10:5000/v2/_catalog  //查看镜像
+    {"repositories":["busybox","myos"]}
+  [root@docker1 oo]# curl  http://192.168.1.10:5000/v2/busybox/tags/list  //查看镜像标签 
+    {"name":"busybox","tags":["latest"]}
+  [root@docker1 oo]# curl  http://192.168.1.10:5000/v2/myos/tags/list 
+    {"name":"myos","tags":["http"]}
+
+docker共享卷
+  docker run -it -v /var/webroot:/abc 192.168.1.10:5000/myos:http
+   //真机和容器共享数据,也可以多容器共享
+   网络中通过共享服务器来多容器共享数据
+
+  配置NFS服务器
+    [root@room9pc01 ~]# yum -y install nfs-utils
+    [root@room9pc01 ~]# mkdir /content
+    [root@room9pc01 ~]# vim /etc/exports
+    /content     *(rw，no_root_squash)
+    [root@room9pc01 ~]# systemctl restart nfs-server.service
+    [root@room9pc01 ~]# systemctl restart nfs-secure.service
+    [root@room9pc01 ~]# exportfs  -rv
+    exporting *:/content
+    [root@room9pc01 ~]# chmod 777 /content
+    [root@room9pc01 ~]# echo 11 > /content/index.html
+  
+  配置客户端
+    [root@docker1 oo]# yum -y install nfs-utils
+    [root@docker1 oo]# systemctl restart nfs-server.service
+    [root@docker1 oo]# showmount -e 192.168.1.254
+    Export list for 192.168.1.254:
+    /content *
+    [root@docker1 ~]# mkdir /mnt/qq
+    [root@docker1 ~]# mount -t nfs 192.168.1.254:/content /mnt/qq
+    [root@docker1 ~]# ls /mnt/qq
+    index.html
+    [root@docker1 ~]# cat  /mnt/qq/index.html 
+    11
+    [root@docker1 ~]# docker run  -d -p 80:80 -v /mnt/qq:/var/www/html -it myos:http
+    224248f0df5d795457c43c2a7dad0b7e5ec86abdc3f31d577e72f7929f020e01
+    [root@docker1 ~]# curl 192.168.1.10
+    11
+    [root@docker2 ~]# yum -y install nfs-utils
+    [root@docker2 ~]# showmount -e 192.168.1.254
+    Export list for 192.168.1.254:
+    /content *
+    [root@docker2 ~]# mkdir /mnt/qq
+    [root@docker2 ~]# mount -t nfs 192.168.1.254:/content /mnt/qq
+    [root@docker2 ~]# docker run  -d -p 80:80 -v /mnt/qq:/var/www/html -it 192.168.1.10:5000/myos:http
+    00346dabec2c7a12958da4b7fee6551020249cdcb111ad6a1058352d2838742a
+    [root@docker2 ~]# curl 192.168.1.20
+    11
+    [root@docker1 ~]# touch /mnt/qq/a.sh
+    [root@docker1 ~]# echo 22 > /mnt/qq/index.html
+    [root@docker2 ~]#ls  /mnt/qq/
+    a.sh  index.html
+    [root@docker2 ~]# cat /mnt/qq/index.html 
+    22
