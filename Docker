@@ -127,7 +127,7 @@ WORKDIR /var/www/html/            //定义容器默认工作目录
 RUN echo "test" > /var/www/html/index.html
 EXPOSE 80                //设置开放端口号
 CMD ["/usr/sbin/httpd", "-DFOREGROUND"]   //修改命令的默认启动方式
-[root@docker1 oo]# docker build -t myos:http .
+[root@docker1 oo]# docker build -t myos:http .   //注意 .是一个参数 代表当前目录
 [root@docker1 oo]# docker run -d  myos:http 
 d9a5402709b26b42cd304c77be442559a5329dc784ec4f6c90e4abac1c88e206
 [root@docker1 oo]# docker inspect d9
