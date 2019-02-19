@@ -94,3 +94,41 @@ CONTAINER ID   IMAGE         COMMAND                  CREATED             STATUS
   [root@docker01 ~]# docker exec -it 14f595a865e4 /bin/bash   //未使用容器的上帝进程开启bash
   root@14f595a865e4:/#
   docker attach 14f595a865e4     //不关闭上帝进程 ctrl+p+Q
+
+自定义镜像
+  a)docker run -it centos  修改内容增改
+  b)ctrl+p+q 
+  c)docker commit 60637e52f298 myos:label    //commit ID
+  d)docker images    
+  e)docker history ID
+
+Dockerfile文件
+ 语法格式
+  FROM:基础镜像
+  MAINTAINER:镜像创建者信息
+  EXPOSE:开放端口
+  ENV:设置变量
+  ADD:复制文件到镜像
+  RUN:制作镜像的执行命令
+  WORKDIR:定义容器的工作目录
+  CMD:容器启动时执行命令, 仅有一条CMD
+  
+[root@docker1 ~]# mkdir oo
+[root@docker1 ~]# cd oo
+[root@docker1 oo]# touch Dockerfile    //Dockerfile文件第一个字母要大写
+[root@docker1 oo]# cp /etc/yum.repos.d/local.repo  ./
+[root@docker1 oo]# vi Dockerfile
+FROM  myos:v1
+RUN yum -y install httpd
+ADD local.repo /etc/yum.repos.d/local.repo
+ENV EnvironmentFile=/etc/sysconfig/httpd
+WORKDIR /var/www/html/            //定义容器默认工作目录
+RUN echo "test" > /var/www/html/index.html
+EXPOSE 80                //设置开放端口号
+CMD ["/usr/sbin/httpd", "-DFOREGROUND"]
+[root@docker1 oo]# docker build -t myos:http .
+[root@docker1 oo]# docker run -d  myos:http 
+d9a5402709b26b42cd304c77be442559a5329dc784ec4f6c90e4abac1c88e206
+[root@docker1 oo]# docker inspect d9
+[root@docker1 oo]# curl 172.17.0.7
+  
