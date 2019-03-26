@@ -24,7 +24,14 @@ virsh基本管理操作
   查看CPU支持虚拟化
       [root@room9pc01 nsd1810]# cat /proc/cpuinfo | grep vmx
       
-  KVM是linux的内核模块 
+KVM是linux的内核模块 
+lsmod  (list modules)
+语法：lsmod
+功能：
+lsmod 命令：是一个小程序，用来显示文件、proc/modules的信息，也就是显示当前内核模块装载的模块。
+补充说明：
+执行lsmod指令，会列出所有已载入系统的模块。Linux操作系统的核心具有模块化的特性，应此在编译核心时，务须把全部的功能都放入核心。
+您可以将这些功能编译成一个个单独的模块，待需要时再分别载入。
       [root@room9pc01 nsd1810]# lsmod | awk '/kvm/'
           kvm_intel             170086  0 
           kvm                   566340  1 kvm_intel
@@ -33,6 +40,28 @@ virsh基本管理操作
  
   QEMU是一个虚拟化的仿真工具,通过ioctl与内核kvm交互完成对硬件的虚拟化支持
        [root@room9pc01 nsd1810]# ps -elww | grep qemu
+  
+ ps [选项]
+ps命令的各个选项的含义如下：
+-e 显示所有进程。
+-f 全格式。
+-h 不显示标题。
+-l 长格式。
+-w 宽输出。
+a  显示终端上的所有进程，包括其他用户的进程。
+r  只显示正在运行的进程。
+u  以用户为主的格式来显示程序状况。
+x  显示所有程序，不以终端机来区分。
+
+ps -ef 显示出的结果：
+    1.UID       用户ID
+    2.PID        进程ID
+    3.PPID      父进程ID
+    4.C           CPU占用率
+    5.STIME     开始时间
+    6.TTY         开始此进程的TTY----终端设备
+    7.TIME       此进程运行的总时间
+    8.CMD       命令名
              
   Libvirt是一个对虚拟化管理的接口和工具,提供用户端程序virsh,virt-install,virt-manager,virt-view交互
      qemu-kvm 内核自带软件 提供底层仿真支持
